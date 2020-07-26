@@ -14,10 +14,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 
 (def nrows 5)
-(def ncols 7)
+(def ncols 6)
 
-(def α (/ π 12))                        ; curvature of the columns
-(def β (/ π 36))                        ; curvature of the rows
+
 (def centerrow (- nrows 3))             ; controls front-back tilt
 (def centercol 4)                       ; controls left-right tilt / tenting (higher number is more tenting)
 (def tenting-angle (/ π 12))            ; or, change this for more precise tenting control
@@ -32,6 +31,24 @@
 
 (def column-style :standard)
 
+(if (true? inner-column) ; curvature of the columns
+    (defn α [column] (cond
+        (= column 0) (/ π 10) ;innermost column
+        (= column 1) (/ π 10) ;inner index
+        (= column 2) (/ π 10) ;index
+        (= column 3) (/ π 10) ;middle
+        (= column 4) (/ π 10) ;ring
+        (>= column 5) (/ π 5) ;pinky
+        :else (/ π 10)))
+    (defn α [column] (cond
+        (= column 0) (/ π 10) ;inner index
+        (= column 1) (/ π 10) ;index
+        (= column 2) (/ π 10) ;middle
+        (= column 3) (/ π 10) ;ring
+        (>= column 4) (/ π 6) ;pinky
+        :else (/ π 10)))
+)              
+(def β (/ π 36))                        ; curvature of the rows
 (if (true? inner-column)
   (defn column-offset [column] (cond
   (<= column 1) [0 -2 0]
@@ -182,8 +199,9 @@
 (def innerrows (range 0 (- nrows 2)))
 
 (def cap-top-height (+ plate-thickness sa-profile-key-height))
-(def row-radius (+ (/ (/ (+ mount-height extra-height) 2)
-                      (Math/sin (/ α 2)))
+(defn row-radius [column]
+(+ (/ (/ (+ mount-height extra-height) 2)
+                      (Math/sin (/ (α column) 2)))
                    cap-top-height))
 (def column-radius (+ (/ (/ (+ mount-width extra-width) 2)
                          (Math/sin (/ β 2)))
@@ -195,27 +213,27 @@
 (defn apply-key-geometry [translate-fn rotate-x-fn rotate-y-fn column row shape]
   (let [column-angle (* β (- centercol column))
         placed-shape (->> shape
-                          (translate-fn [(offset-for-column column, row) 0 (- row-radius)])
-                          (rotate-x-fn  (* α (- centerrow row)))
-                          (translate-fn [0 0 row-radius])
+                          (translate-fn [(offset-for-column column, row) 0 (- (row-radius column))])
+                          (rotate-x-fn  (* (α column) (- centerrow row)))
+                          (translate-fn [0 0 (row-radius column)])
                           (translate-fn [0 0 (- column-radius)])
                           (rotate-y-fn  column-angle)
                           (translate-fn [0 0 column-radius])
                           (translate-fn (column-offset column)))
         column-z-delta (* column-radius (- 1 (Math/cos column-angle)))
         placed-shape-ortho (->> shape
-                                (translate-fn [0 0 (- row-radius)])
-                                (rotate-x-fn  (* α (- centerrow row)))
-                                (translate-fn [0 0 row-radius])
+                                (translate-fn [0 0 (- (row-radius column))])
+                                (rotate-x-fn  (* (α column) (- centerrow row)))
+                                (translate-fn [0 0 (row-radius column)])
                                 (rotate-y-fn  column-angle)
                                 (translate-fn [(- (* (- column centercol) column-x-delta)) 0 column-z-delta])
                                 (translate-fn (column-offset column)))
         placed-shape-fixed (->> shape
                                 (rotate-y-fn  (nth fixed-angles column))
                                 (translate-fn [(nth fixed-x column) 0 (nth fixed-z column)])
-                                (translate-fn [0 0 (- (+ row-radius (nth fixed-z column)))])
-                                (rotate-x-fn  (* α (- centerrow row)))
-                                (translate-fn [0 0 (+ row-radius (nth fixed-z column))])
+                                (translate-fn [0 0 (- (+ (row-radius column) (nth fixed-z column)))])
+                                (rotate-x-fn  (* (α column) (- centerrow row)))
+                                (translate-fn [0 0 (+ (row-radius column) (nth fixed-z column))])
                                 (rotate-y-fn  fixed-tenting)
                                 (translate-fn [0 (second (column-offset column)) 0]))]
     (->> (case column-style
@@ -224,6 +242,7 @@
                placed-shape)
          (rotate-y-fn  tenting-angle)
          (translate-fn [0 0 keyboard-z-offset]))))
+
 
 (defn key-place [column row shape]
   (apply-key-geometry translate
@@ -1376,7 +1395,8 @@
                                       )
                                usb-holder-space
                                usb-holder-notch
-                               screw-insert-holes)
+                               screw-insert-holes
+                               )
                     ; thumbcaps-type
                     ; caps
                    )
