@@ -17,16 +17,16 @@
 (def ncols 6)
 
 
-(def centerrow (- nrows 3))             ; controls front-back tilt
-(def centercol 4)                       ; controls left-right tilt / tenting (higher number is more tenting)
+
+                     
 (def tenting-angle (/ π 12))            ; or, change this for more precise tenting control
 
-(def pinky-15u true)                   ; controls whether the outer column uses 1.5u keys
+(def pinky-15u false)                   ; controls whether the outer column uses 1.5u keys
 (def first-15u-row 0)                   ; controls which should be the first row to have 1.5u keys on the outer column
 (def last-15u-row 3)                    ; controls which should be the last row to have 1.5u keys on the outer column
 
-(def extra-row true)                   ; adds an extra bottom row to the outer columns
-(def inner-column true)                ; adds an extra inner column (two less rows than nrows)
+(def extra-row false)                   ; adds an extra bottom row to the outer columns
+(def inner-column false)                ; adds an extra inner column (two less rows than nrows)
 (def thumb-style "new")                ; toggles between "default", "mini", and "new" thumb cluster
 
 (def column-style :standard)
@@ -49,6 +49,30 @@
         :else (/ π 10)))
 )              
 (def β (/ π 36))                        ; curvature of the rows
+
+(if (true? inner-column) ; curvature of the columns
+    (defn centerrow [column] (cond
+        (= column 0) (- nrows 3)  ;innermost column
+        (= column 1) (- nrows 3)  ;inner index
+        (= column 2) (- nrows 3)  ;index
+        (= column 3) (- nrows 3)  ;middle
+        (= column 4) (- nrows 3)  ;ring
+        (>= column 5) (- nrows 3)  ;pinky
+        :else (- nrows 3))
+    )
+    (defn centerrow [column] (cond
+        (= column 0) (- nrows 3)  ;inner index
+        (= column 1) (- nrows 3)  ;index
+        (= column 2) (- nrows 3)  ;middle
+        (= column 3) (- nrows 3)  ;ring
+        (>= column 4) (- nrows 2)  ;pinky
+        :else (- nrows 3) )
+    )
+) 
+
+(def centercol 4)  ; controls left-right tilt / tenting (higher number is more tenting)
+
+
 (if (true? inner-column)
   (defn column-offset [column] (cond
   (<= column 1) [0 -2 0]
@@ -214,7 +238,7 @@
   (let [column-angle (* β (- centercol column))
         placed-shape (->> shape
                           (translate-fn [(offset-for-column column, row) 0 (- (row-radius column))])
-                          (rotate-x-fn  (* (α column) (- centerrow row)))
+                          (rotate-x-fn  (* (α column) (- (centerrow column) row)))
                           (translate-fn [0 0 (row-radius column)])
                           (translate-fn [0 0 (- column-radius)])
                           (rotate-y-fn  column-angle)
@@ -223,7 +247,7 @@
         column-z-delta (* column-radius (- 1 (Math/cos column-angle)))
         placed-shape-ortho (->> shape
                                 (translate-fn [0 0 (- (row-radius column))])
-                                (rotate-x-fn  (* (α column) (- centerrow row)))
+                                (rotate-x-fn  (* (α column) (- (centerrow column) row)))
                                 (translate-fn [0 0 (row-radius column)])
                                 (rotate-y-fn  column-angle)
                                 (translate-fn [(- (* (- column centercol) column-x-delta)) 0 column-z-delta])
@@ -232,7 +256,7 @@
                                 (rotate-y-fn  (nth fixed-angles column))
                                 (translate-fn [(nth fixed-x column) 0 (nth fixed-z column)])
                                 (translate-fn [0 0 (- (+ (row-radius column) (nth fixed-z column)))])
-                                (rotate-x-fn  (* (α column) (- centerrow row)))
+                                (rotate-x-fn  (* (α column) (- (centerrow column) row)))
                                 (translate-fn [0 0 (+ (row-radius column) (nth fixed-z column))])
                                 (rotate-y-fn  fixed-tenting)
                                 (translate-fn [0 (second (column-offset column)) 0]))]
