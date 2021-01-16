@@ -6,30 +6,64 @@
               [unicode-math.core :refer :all]))
 
 
+(def plate-params
+    {
+        :plate-thickness 4
+        :keyswitch-height 14.15
+        :keyswitch-width 14.15
+        :retention-tab-thickness 1.5
+        ;:retention-tab-hole-thickness (- :plate-thickness :retention-tab-thickness)
+        :create-side-nubs? false
+        :side-nub-thickness 4
+        ;:mount-width (+ :keyswitch-width 3.2)
+        ;:mount-height (+ :keyswitch-height 2.7)
+        :base-plate-width 1.5
 
-    (def keyswitch-height 14.15) ;14.4? original 14.15
-    (def keyswitch-width 14.15)  ;14.4? original 14.15
+    }
+)
 
-    (def create-side-nubs? false)
-
-    (def sa-profile-key-height 12.7)
-
-    (def plate-thickness 4)
-    (def side-nub-thickness 4)
-    (def retention-tab-thickness 1.5)
-    (def retention-tab-hole-thickness (- plate-thickness retention-tab-thickness))
-    (def mount-width (+ keyswitch-width 3.2))
-    (def mount-height (+ keyswitch-height 2.7))
-    (def base-plate-width 1.5)
-    (if (true? innercolumn)
-    (defn plate-width [column] (cond
-        (= column 4) (+ base-plate-width 5)
-        :else base-plate-width))
-    (defn plate-width [column] (cond
-        (= column 3) (+ base-plate-width 5)
-        :else base-plate-width)))
+(def mount-params 
+    (let [{:keys [plate-thickness retention-tab-thickness keyswitch-height keyswitch-width]} plate-params]
+        (merge plate-params
+            {
+                :retention-tab-hole-thickness (- plate-thickness retention-tab-thickness)
+                :mount-width (+ keyswitch-width 3.2)
+                :mount-height (+ keyswitch-height 2.7)             
+            }
+        )
+    )
+)
 
 
+
+;    (defn plate-width {:plate-params[column]
+;        (let [target (if inner-column 3 4)]
+;            (if (= column target)
+;                (+ base-plate-width 5))
+;            base-plate-width
+;        )
+;    )
+    
+(defn plate-width [{:keys [base-plate-width] :as params}]
+    base-plate-width
+)
+
+
+
+    ;(def keyswitch-height 14.15) ;14.4? original 14.15
+    ;(def keyswitch-width 14.15)  ;14.4? original 14.15
+
+    ;(def create-side-nubs? false)
+
+    ;(def plate-thickness 4)
+    ;(def side-nub-thickness 4)
+    ;(def retention-tab-thickness 1.5)
+    ;(def retention-tab-hole-thickness (- plate-thickness retention-tab-thickness))
+    ;(def mount-width (+ keyswitch-width 3.2))
+    ;(def mount-height (+ keyswitch-height 2.7))
+    ;(def base-plate-width 1.5)
+
+(comment
     (defn single-plate [column]
     (let [top-wall (->> (cube (+ keyswitch-width 3) (base-plate-width column) plate-thickness)
                         (translate [0
@@ -63,23 +97,11 @@
         top-nub-pair
         (rotate (/ π 2) [0 0 1])))))
 
+)
 
-
-(def create-side-nubs? false)
-(def keyswitch-height 14.15)  ;14.4?
-(def keyswitch-width 14.15)   ; 14.4?
-
-(def sa-profile-key-height 12.7)
-
-(def plate-thickness 4)
-(def side-nub-thickness 4)
-(def retention-tab-thickness 1.5)
-(def retention-tab-hole-thickness (- plate-thickness retention-tab-thickness))
-(def mount-width (+ keyswitch-width 3.2))
-(def mount-height (+ keyswitch-height 2.7))
-(def base-plate-width 1.5)
-(comment
-(def single-plate
+(defn single-plate [{:keys [base-plate-width keyswitch-width plate-thickness
+                                    keyswitch-height side-nub-thickness retention-tab-hole-thickness
+                                    create-side-nubs? ] :as params}]
   (let [top-wall (->> (cube (+ keyswitch-width 3) base-plate-width plate-thickness)
                       (translate [0
                                   (+ (/ base-plate-width 2) (/ keyswitch-height 2))
@@ -112,7 +134,6 @@
       top-nub-pair
       (rotate (/ π 2) [0 0 1])))))
 
-)
 
 (def single-hole
     ;(single-plate 0)

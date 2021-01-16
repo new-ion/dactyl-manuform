@@ -12,7 +12,7 @@
 (def nrows 5)
 (def ncols 6)                 
 
-(def pinky-15u true)                   ; controls whether the outer column uses 1.5u keys
+(def pinky-15u false)                   ; controls whether the outer column uses 1.5u keys
 (def first-15u-row 0)                   ; controls which should be the first row to have 1.5u keys on the outer column
 (def last-15u-row 3)                    ; controls which should be the last row to have 1.5u keys on the outer column
 
@@ -30,11 +30,11 @@
         (>= column 5) (/ π 7) ;pinky
         :else (/ π 10)))
     (defn α [column] (cond
-        (= column 0) (/ π 10) ;inner index
-        (= column 1) (/ π 10) ;index
-        (= column 2) (/ π 10) ;middle
-        (= column 3) (/ π 10) ;ring
-        (>= column 4) (/ π 7) ;pinky
+        (= column 0) (/ π 12) ;inner index
+        (= column 1) (/ π 12) ;index
+        (= column 2) (/ π 12) ;middle
+        (= column 3) (/ π 12) ;ring
+        (>= column 4) (/ π 12) ;pinky
         :else (/ π 10)))
 )              
 (def β (/ π 36))                        ; curvature of the rows
@@ -71,7 +71,7 @@
   :else [0 0 0]))
   (defn column-offset [column] (cond
   (= column 2) [0 2.82 -4.5]
-  (>= column 4) [0 -22 5.64]            ; original [0 -5.8 5.64]
+  (>= column 4) [0 -5.8 5.64]            ; original [0 -5.8 5.64] - 22 Y
   :else [0 0 0]))
   )
 
